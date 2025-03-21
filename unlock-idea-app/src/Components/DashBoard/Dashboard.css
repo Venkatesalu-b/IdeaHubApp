@@ -1,0 +1,6 @@
+.dashboard-container{
+    display:flex;
+    /* background-color: aqua; */
+    position: relative;
+    gap: 55px;
+}

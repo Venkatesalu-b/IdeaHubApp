@@ -1,0 +1,7 @@
+.ConnectForm{
+    display: flex;
+}
+.formcontainer{
+    display: flex;
+    flex-direction: column;
+}

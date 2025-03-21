@@ -1,0 +1,8 @@
+.userProfileheader{
+    display: flex;
+    gap: 15;
+}
+.profileItem{
+    display: flex;
+    align-items: center;
+}
