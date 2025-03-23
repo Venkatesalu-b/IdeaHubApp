@@ -4,7 +4,7 @@ const AvailableProducts = ()=>{
     return(
         <>
         <div>
-            AvailableProducts
+            AvailableProducts Page
         </div>
         </>
     )
