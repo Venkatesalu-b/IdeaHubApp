@@ -9,8 +9,7 @@ const ChatPage = ({ selectedUser }) => {
         ...userMessage.map(msg => ({ ...msg, isUser: true })),
         ...senderMessage.map(msg => ({ ...msg, isUser: false }))
     ];
-console.log(combinedMessages,"tttttttttttttttttttt");
-const sortedMessages = combinedMessages.sort((a, b) => b.messageTime.localeCompare(a.messageTime)).reverse();
+    const sortedMessages = combinedMessages.sort((a, b) => b.messageTime.localeCompare(a.messageTime)).reverse();
 
     const messageContainerRef = useRef(null);
 
@@ -25,7 +24,7 @@ const sortedMessages = combinedMessages.sort((a, b) => b.messageTime.localeCompa
         if (messageContainer) {
             messageContainer.scrollTop = messageContainer.scrollHeight;
         }
-    }, [senderMessage]); 
+    }, [senderMessage]);
 
     return (
         <div style={{
@@ -45,7 +44,7 @@ const sortedMessages = combinedMessages.sort((a, b) => b.messageTime.localeCompa
                     flexGrow: 1,
                     overflowY: "auto",
                     padding: "40px",
-                    marginBottom:"10px",
+                    marginBottom: "10px",
                     maxHeight: "calc(100% - 100px)" // Ensures the chat area takes up all space except for the input area
                 }}
             >
