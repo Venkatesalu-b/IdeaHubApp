@@ -5,6 +5,8 @@ const AvailableProducts = ()=>{
         <>
         <div>
             AvailableProducts Page
+            1.Car
+            2.Bus
         </div>
         </>
     )
