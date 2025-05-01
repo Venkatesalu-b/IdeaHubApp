@@ -5,7 +5,7 @@ const db = require('../../db');
 
 router.get('/getAllProfiles', (req, res) => {
     const { userLoginName } = req.query;
-    console.log(userLoginName, "uuuuuuuuuuuuu");
+    // console.log(userLoginName, "uuuuuuuuuuuuu");
 
     const sqlQuery = `SELECT * FROM create_profile`;
 
