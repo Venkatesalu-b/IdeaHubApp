@@ -1,68 +1,95 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
 import dayjs from "dayjs";
 import { APIURL } from "../URL/url";
+import { io } from "socket.io-client";
+
+const SOCKET_SERVER_URL = "http://localhost:7000";
 
 const useChatPage = () => {
-    const [inputMessage, setInputMessage] = useState("");
-    const [userMessage, setUserMessage] = useState([]);
-    const [senderMessage, setSenderMessage] = useState([]);
-    const [selectUser, setSelectUser] = useState(""); // Correct variable name
-    const loginUserName = localStorage.getItem("userLoginName");
-    const apiUrl = APIURL;
+  const [inputMessage, setInputMessage] = useState("");
+  const [userMessage, setUserMessage] = useState([]);
+  const [senderMessage, setSenderMessage] = useState([]);
+  const [selectUser, setSelectUser] = useState("");
+  const loginUserName = localStorage.getItem("userLoginName");
+  const apiUrl = APIURL;
 
-    const handleSend = async (selectedUser) => {
-        console.log(selectedUser, "selecteduserkkkkkkk", loginUserName);
-        setSelectUser(selectedUser?.userName); // Set selected user
+  const socketRef = useRef();
 
-        const todayDate = dayjs().format("YYYY-MM-DD");
-        const timestamp = dayjs().toISOString();  // Get ISO 8601 format with milliseconds
+  // Initialize socket connection once
+  useEffect(() => {
+    socketRef.current = io(SOCKET_SERVER_URL);
 
-        try {
-            const response = await axios.post(`${apiUrl}/chat/send`, {
-                userName: loginUserName,
-                message: inputMessage,
-                messageDate: todayDate,
-                messageTime: timestamp,
-                senderName: selectedUser?.userName
-            });
+    // Listen for incoming messages
+    socketRef.current.on("receiveMessage", (data) => {
+      console.log("Socket message received:", data);
 
-            console.log("Message sent successfully:", response.data);
-            setInputMessage(""); // Reset the input message after sending
-        } catch (error) {
-            console.error("Error sending message:", error.response ? error.response.data : error.message);
-        }
+      if (
+        (data.userName === loginUserName && data.senderName === selectUser) ||
+        (data.userName === selectUser && data.senderName === loginUserName)
+      ) {
+        // Refresh message list when new message arrives
+        fetchMessages();
+      }
+    });
+
+    return () => {
+      socketRef.current.disconnect();
+    };
+  }, [loginUserName, selectUser]);
+
+  const handleSend = async (selectedUser) => {
+    setSelectUser(selectedUser?.userName);
+
+    const todayDate = dayjs().format("YYYY-MM-DD");
+    const timestamp = dayjs().toISOString();
+
+    const messagePayload = {
+      userName: loginUserName,
+      message: inputMessage,
+      messageDate: todayDate,
+      messageTime: timestamp,
+      senderName: selectedUser?.userName,
     };
 
-    // Fetch messages when the selected user changes
-    const messageData = useMemo(() => {
-        if (!selectUser) return; // If no user is selected, do not fetch messages
+    try {
+      await axios.post(`${apiUrl}/chat/send`, messagePayload);
+      socketRef.current.emit("sendMessage", messagePayload); // Emit over websocket
+      setInputMessage("");
+    } catch (error) {
+      console.error("Error sending message:", error.response ? error.response.data : error.message);
+    }
+  };
 
-        const fetchMessages = async () => {
-            try {
-                const response = await axios.get(`${apiUrl}/chat/history/${loginUserName}/${selectUser}/${loginUserName}/${selectUser}`);
-                console.log("Messages fetched:", response.data);
+  // Fetch messages between selected users
+  const fetchMessages = async () => {
+    if (!selectUser) return;
 
-                setUserMessage(response.data.user1Messages); 
-                setSenderMessage(response.data.user2Messages); 
-            } catch (error) {
-                console.log("Error fetching messages:", error);
-            }
-        };
+    try {
+      const response = await axios.get(
+        `${apiUrl}/chat/history/${loginUserName}/${selectUser}/${loginUserName}/${selectUser}`
+      );
 
-        fetchMessages(); // Trigger fetch when selectUser changes
-    }, [loginUserName, selectUser,inputMessage]); // Re-fetch when selectUser changes
+      setUserMessage(response.data.user1Messages);
+      setSenderMessage(response.data.user2Messages);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    }
+  };
 
-    return {
-        inputMessage,
-        setInputMessage,
-        handleSend,
-        messageData,
-        userMessage,
-        senderMessage,
-        selectUser,
-        setSelectUser
-    };
+  useEffect(() => {
+    fetchMessages();
+  }, [selectUser]);
+
+  return {
+    inputMessage,
+    setInputMessage,
+    handleSend,
+    userMessage,
+    senderMessage,
+    selectUser,
+    setSelectUser,
+  };
 };
 
 export default useChatPage;
